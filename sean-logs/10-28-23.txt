@@ -1,0 +1,22 @@
+10.28
+
+12-2pm
+Creating timing functions to compare times between native functions to lua functions:
+Old Output:
+Command: native_object_set_hp
+Result: Success
+
+New Output:
+Command: native_object_set_hp
+Result: Success
+Execution Time: 0.015000000000001 seconds
+
+2-5pm
+Starting creating Cacti Council Workflow documentation:
+https://docs.google.com/document/d/1o1IaVMfMwSk0oGwIDICMz0qjOtzKBJ1TLn2k3la7u6o/edit
+
+Listing details about the Lua API assignment spreadsheet
+How to insert a native class into minetest development
+Seperation writting fundamentals
+Test writting fundamentals
+Lua interaction with C++ basics

@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "server.h"
 #include "rollback_interface.h"
 
+#include "../native_api/native_rollback.h"
 
 void push_RollbackNode(lua_State *L, RollbackNode &node)
 {
@@ -78,6 +79,51 @@ int ModApiRollback::l_rollback_get_node_actions(lua_State *L)
 	return 1;
 }
 
+int ModApiRollback::l_native_rollback_get_node_actions(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+
+	v3s16 pos = read_v3s16(L, 1);
+	int range = luaL_checknumber(L, 2);
+	time_t seconds = (time_t)luaL_checknumber(L, 3);
+	int limit = luaL_checknumber(L, 4);
+	Server *server = getServer(L);
+
+	std::pair<bool, std::list<RollbackAction>> nodeActions =
+			nativeModApiRollback::n_rollback_get_node_actions(
+					server, pos, range, seconds, limit);
+
+	if (!nodeActions.first) {
+		return 0;
+	}
+
+	std::list<RollbackAction>::iterator iter = nodeActions.second.begin();
+
+	lua_createtable(L, nodeActions.second.size(), 0);
+	for (unsigned int i = 1; iter != nodeActions.second.end(); ++iter, ++i) {
+		lua_createtable(L, 0, 5); // Make a table with enough space pre-allocated
+
+		lua_pushstring(L, iter->actor.c_str());
+		lua_setfield(L, -2, "actor");
+
+		push_v3s16(L, iter->p);
+		lua_setfield(L, -2, "pos");
+
+		lua_pushnumber(L, iter->unix_time);
+		lua_setfield(L, -2, "time");
+
+		push_RollbackNode(L, iter->n_old);
+		lua_setfield(L, -2, "oldnode");
+
+		push_RollbackNode(L, iter->n_new);
+		lua_setfield(L, -2, "newnode");
+
+		lua_rawseti(L, -2, i); // Add action table to main table
+	}
+	return 1;
+}
+
+
 // rollback_revert_actions_by(actor, seconds) -> bool, log messages
 int ModApiRollback::l_rollback_revert_actions_by(lua_State *L)
 {
@@ -110,8 +156,45 @@ int ModApiRollback::l_rollback_revert_actions_by(lua_State *L)
 	return 2;
 }
 
+int ModApiRollback::l_native_rollback_revert_actions_by(lua_State *L)
+{
+	MAP_LOCK_REQUIRED;
+	std::string actor = luaL_checkstring(L, 1);
+	int seconds = luaL_checknumber(L, 2);
+	Server *server = getServer(L);
+	nativeModApiRollback n_modApiRollback;
+	std::pair<bool, std::list<std::string>> result;
+
+	result = nativeModApiRollback::n_rollback_revert_actions_by(server, actor, seconds);
+
+	
+	if (result.first == false && result.second.size() == 0) {
+		lua_pushboolean(L, false);
+		lua_newtable(L);
+		return 2;
+	}
+	// Push boolean result
+	lua_pushboolean(L, result.first);
+	lua_createtable(L, result.second.size(), 0);
+	unsigned long i = 0;
+	std::list<std::string> log = result.second;
+	for (auto iter = log.begin();
+			iter != log.end();
+			++i, ++iter) {
+		lua_pushnumber(L, i);
+		lua_pushstring(L, iter->c_str());
+		lua_settable(L, -3);
+	}
+	
+
+	return 2;
+}
+
+
 void ModApiRollback::Initialize(lua_State *L, int top)
 {
 	API_FCT(rollback_get_node_actions);
+	API_FCT(native_rollback_get_node_actions);
 	API_FCT(rollback_revert_actions_by);
+	API_FCT(native_rollback_revert_actions_by);
 }

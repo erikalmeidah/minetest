@@ -1,0 +1,54 @@
+10-4
+Created Lua Tests - 11 - 1pm
+Created Send_Mapblock
+Need to find trigger, currently only outputs false.
+
+Example Output:
+2023-10-04 12:08:50: [Server]: caught command 'lua_object_send_mapblock', issued by 'singleplayer'. Parameters: ''
+2023-10-04 12:08:50: [Server]: Sends an already loaded mapblock to the player.
+Returns false if nothing was sent (note that this can also mean that the client already has the block)
+Resource intensive - use sparsely
+2023-10-04 12:08:50: [Server]: Size of Active Objects Array: 1
+2023-10-04 12:08:50: [Server]: Mapblock was NOT sent to player. Responce:  false
+
+Created Get Animation Test
+Tests for player's and/or objects animation and outputs the y,x coords.
+returns range, frame_speed, frame_blend and frame_loop.
+NEED TO FIND BETTER DUMP FUNCTION
+
+Example Output:
+2023-10-04 12:21:42: [Server]: caught command 'lua_object_get_animation', issued by 'singleplayer'. Parameters: ''
+2023-10-04 12:21:42: [Server]: lua_object_get_weilded_item is running!
+2023-10-04 12:21:42: [Server]: Size of Active Objects Array: 2
+2023-10-04 12:21:42: WARNING[Server]: Deprecated call to "get_entity_name (at ...\bin\Debug\..\..\mods\testingnativeapi_server/object.lua:673)
+2023-10-04 12:21:42: [Server]: The Current animation information for __builtin:item is {
+	y = 0,
+	x = 0
+}
+
+Created Get Local Animation Test
+Tests for player's animation and outputs the x,y coords for the animation.
+returns idle, walk, dig, walk_while_dig tables and frame_speed
+NEED TO FIND BETTER DUMP FUNCTION
+
+Example Output:
+2023-10-04 12:28:40: [Server]: caught command 'lua_object_get_local_animation', issued by 'singleplayer'. Parameters: ''
+2023-10-04 12:28:40: [Server]: lua_object_get_local_animation_item is running!
+2023-10-04 12:28:40: [Server]: Size of Active Objects Array: 1
+2023-10-04 12:28:40: [Server]: The Current animation information for singleplayer is {
+	x = 0,
+	y = 0
+}
+
+Weekly meeting with Erik and Anthony - 1 - 2pm
+- Anthony found that the native testing errors arose with LNK2019 which is caused by the native files not being linked to the project
+- To fix this 
+  - Go the File > Move "native_file.cpp/.h" > Minetest
+  
+Continued working on native testing - 2pm - 4pm
+- Linker error removed but now having issue with creating new functions and calling them within the mods folder.
+- Came to this conclusion by rewriting l_remove and calling it l_native_remove and not calling n_remove within the function but copying l_remove
+- Prints nil responce when called even though it is the same function with a different name
+
+Create documentation - 11 - 12am
+

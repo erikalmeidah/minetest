@@ -27,8 +27,12 @@ private:
 	// rollback_get_node_actions(pos, range, seconds) -> {{actor, pos, time, oldnode, newnode}, ...}
 	static int l_rollback_get_node_actions(lua_State *L);
 
+	static int l_native_rollback_get_node_actions(lua_State *L);
+
 	// rollback_revert_actions_by(actor, seconds) -> bool, log messages
 	static int l_rollback_revert_actions_by(lua_State *L);
+
+	static int l_native_rollback_revert_actions_by(lua_State *L);
 
 public:
 	static void Initialize(lua_State *L, int top);

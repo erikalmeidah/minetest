@@ -35,6 +35,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "server/player_sao.h"
 #include "server/serverinventorymgr.h"
 
+
+#include "../native_api/native_object.h"
 /*
 	ObjectRef
 */
@@ -114,6 +116,23 @@ int ObjectRef::l_remove(lua_State *L)
 	return 0;
 }
 
+//6-14+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// native_get_pos(self)
+int ObjectRef::l_native_remove(lua_State *L)
+{
+	GET_ENV_PTR;
+
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+	if (sao == nullptr)
+		return 0;
+	if (sao->getType() == ACTIVEOBJECT_TYPE_PLAYER)
+		return 0;
+
+	return nativeObjectRef::native_remove(sao);
+
+}
+
 // get_pos(self)
 int ObjectRef::l_get_pos(lua_State *L)
 {
@@ -125,6 +144,24 @@ int ObjectRef::l_get_pos(lua_State *L)
 
 	push_v3f(L, sao->getBasePosition() / BS);
 	return 1;
+}
+
+//6-14+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// native_get_pos(self)
+int ObjectRef::l_native_get_pos(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+
+	v3f position = nativeObjectRef::native_get_pos(sao);
+	v3f temp;
+
+	if (position != temp) {
+		push_v3f(L, position / BS);
+		return 1;
+	}
+	return 0;
 }
 
 // set_pos(self, pos)
@@ -142,6 +179,21 @@ int ObjectRef::l_set_pos(lua_State *L)
 	return 0;
 }
 
+//6-14+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_pos(lua_State *L) {
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    v3f pos = checkFloatPos(L, 2);
+
+    nativeObjectRef::n_set_pos(sao, pos);
+
+    return 0;
+}
+
 // move_to(self, pos, continuous)
 int ObjectRef::l_move_to(lua_State *L)
 {
@@ -156,6 +208,23 @@ int ObjectRef::l_move_to(lua_State *L)
 
 	sao->moveTo(pos, continuous);
 	return 0;
+}
+
+//6-14+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_move_to(lua_State *L) {
+    NO_MAP_LOCK_REQUIRED;
+
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    v3f pos = checkFloatPos(L, 2);
+    bool continuous = readParam<bool>(L, 3);
+
+    nativeObjectRef::n_move_to(sao, pos, continuous);
+
+    return 0;
 }
 
 // punch(self, puncher, time_from_last_punch, tool_capabilities, dir)
@@ -196,6 +265,27 @@ int ObjectRef::l_punch(lua_State *L)
 	return 1;
 }
 
+//6-17+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_punch(lua_State *L) {
+    NO_MAP_LOCK_REQUIRED;
+
+    ObjectRef *ref = checkobject(L, 1);
+    ObjectRef *puncher_ref = checkobject(L, 2);
+    ServerActiveObject *sao = getobject(ref);
+    ServerActiveObject *puncher = getobject(puncher_ref);
+    if (sao == nullptr || puncher == nullptr)
+        return 0;
+
+    float time_from_last_punch = readParam<float>(L, 3, 1000000.0f);
+    ToolCapabilities toolcap = read_tool_capabilities(L, 4);
+    v3f dir = readParam<v3f>(L, 5, sao->getBasePosition() - puncher->getBasePosition());
+
+    float wear = nativeObjectRef::n_punch(sao, puncher, time_from_last_punch, toolcap, dir);
+
+    lua_pushnumber(L, wear);
+    return 1;
+}
+
 // right_click(self, clicker)
 int ObjectRef::l_right_click(lua_State *L)
 {
@@ -209,6 +299,23 @@ int ObjectRef::l_right_click(lua_State *L)
 
 	sao->rightClick(sao2);
 	return 0;
+}
+
+//6-17+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_right_click(lua_State *L) {
+    NO_MAP_LOCK_REQUIRED;
+
+    ObjectRef *ref = checkobject(L, 1);
+    ObjectRef *ref2 = checkobject(L, 2);
+    ServerActiveObject *sao = getobject(ref);
+    ServerActiveObject *sao2 = getobject(ref2);
+
+    if (sao == nullptr || sao2 == nullptr)
+        return 0;
+
+    nativeObjectRef::n_right_click(sao, sao2);
+
+    return 0;
 }
 
 // set_hp(self, hp, reason)
@@ -245,6 +352,36 @@ int ObjectRef::l_set_hp(lua_State *L)
 	return 0;
 }
 
+//6-17+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_hp(lua_State *L) {
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    int hp = readParam<float>(L, 2);
+    PlayerHPChangeReason reason(PlayerHPChangeReason::SET_HP);
+
+    reason.from_mod = true;
+    if (lua_istable(L, 3)) {
+        lua_pushvalue(L, 3);
+
+        lua_getfield(L, -1, "type");
+        if (lua_isstring(L, -1) &&
+                !reason.setTypeFromString(readParam<std::string>(L, -1))) {
+            errorstream << "Bad type given!" << std::endl;
+        }
+        lua_pop(L, 1);
+
+        reason.lua_reference = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    nativeObjectRef::n_set_hp(sao, hp, reason);
+
+    return 0;
+}
+
 // get_hp(self)
 int ObjectRef::l_get_hp(lua_State *L)
 {
@@ -261,6 +398,18 @@ int ObjectRef::l_get_hp(lua_State *L)
 
 	lua_pushnumber(L, hp);
 	return 1;
+}
+
+//6-17+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_hp(lua_State *L) {
+    NO_MAP_LOCK_REQUIRED;
+
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    int hp = nativeObjectRef::n_get_hp(sao);
+
+    lua_pushnumber(L, hp);
+    return 1;
 }
 
 // get_inventory(self)
@@ -280,6 +429,24 @@ int ObjectRef::l_get_inventory(lua_State *L)
 	return 1;
 }
 
+//6-17+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_inventory(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+	if (sao == nullptr)
+		return 0;
+
+	InvRef inv = nativeObjectRef::n_get_inventory(sao);
+	if (inv.exists())
+		inv.push(L);
+	else
+		lua_pushnil(L);
+
+	return 1;
+}
+
 // get_wield_list(self)
 int ObjectRef::l_get_wield_list(lua_State *L)
 {
@@ -291,6 +458,21 @@ int ObjectRef::l_get_wield_list(lua_State *L)
 
 	lua_pushstring(L, sao->getWieldList().c_str());
 	return 1;
+}
+
+//6-22+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_wield_list(lua_State *L) {
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    // Call the native function
+    std::string wieldList = nativeObjectRef::n_get_wield_list(sao);
+
+    lua_pushstring(L, wieldList.c_str());
+    return 1;
 }
 
 // get_wield_index(self)
@@ -305,6 +487,21 @@ int ObjectRef::l_get_wield_index(lua_State *L)
 	lua_pushinteger(L, sao->getWieldIndex() + 1);
 	return 1;
 }
+
+//6-22+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_wield_index(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (nativeObjectRef::n_get_wield_index(sao) == -1)
+        return 0;
+
+    int wieldIndex = nativeObjectRef::n_get_wield_index(sao); // Reference to n_get_wield_index
+    lua_pushinteger(L, wieldIndex);
+    return 1;
+}
+
 
 // get_wielded_item(self)
 int ObjectRef::l_get_wielded_item(lua_State *L)
@@ -324,6 +521,23 @@ int ObjectRef::l_get_wielded_item(lua_State *L)
 	return 1;
 }
 
+//6-22+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_wielded_item(lua_State *L) {
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr) {
+        // Empty ItemStack
+        LuaItemStack::create(L, ItemStack());
+        return 1;
+    }
+
+    // Call the native function to get the wielded item
+    ItemStack selected_item = nativeObjectRef::n_get_wielded_item(sao);
+    LuaItemStack::create(L, selected_item);
+    return 1;
+}
+
 // set_wielded_item(self, item)
 int ObjectRef::l_set_wielded_item(lua_State *L)
 {
@@ -341,6 +555,25 @@ int ObjectRef::l_set_wielded_item(lua_State *L)
 	}
 	lua_pushboolean(L, success);
 	return 1;
+}
+
+//6-22+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_wielded_item(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    ItemStack item = read_item(L, 2, getServer(L)->idef());
+
+    bool success = nativeObjectRef::n_set_wielded_item(sao, item);
+    if (success && sao->getType() == ACTIVEOBJECT_TYPE_PLAYER) {
+        getServer(L)->SendInventory((PlayerSAO *)sao, true);
+    }
+    lua_pushboolean(L, success);
+    return 1;
 }
 
 // set_armor_groups(self, groups)
@@ -368,6 +601,26 @@ int ObjectRef::l_set_armor_groups(lua_State *L)
 	return 0;
 }
 
+//6-23+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_armor_groups(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    ItemGroupList groups;
+    read_groups(L, 2, groups);
+
+    std::pair<bool, ItemGroupList> result = nativeObjectRef::n_set_armor_groups(sao, groups);
+    if (!result.first) {
+        return 0;
+    }
+
+    return 0;
+}
+
 // get_armor_groups(self)
 int ObjectRef::l_get_armor_groups(lua_State *L)
 {
@@ -378,6 +631,20 @@ int ObjectRef::l_get_armor_groups(lua_State *L)
 		return 0;
 
 	push_groups(L, sao->getArmorGroups());
+	return 1;
+}
+
+//6-23+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_armor_groups(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+	if (sao == nullptr)
+		return 0;
+
+	std::map<std::string, int> armorGroups = nativeObjectRef::n_get_armor_groups(sao);
+	push_groups(L, armorGroups);
 	return 1;
 }
 
@@ -399,6 +666,24 @@ int ObjectRef::l_set_animation(lua_State *L)
 	return 0;
 }
 
+//7-1+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_animation(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    v2f frame_range = readParam<v2f>(L, 2, v2f(1, 1));
+    float frame_speed = readParam<float>(L, 3, 15.0f);
+    float frame_blend = readParam<float>(L, 4, 0.0f);
+    bool frame_loop = readParam<bool>(L, 5, true);
+
+    nativeObjectRef::n_set_animation(sao, frame_range, frame_speed, frame_blend, frame_loop);
+    return 0;
+}
+
 // get_animation(self)
 int ObjectRef::l_get_animation(lua_State *L)
 {
@@ -414,6 +699,28 @@ int ObjectRef::l_get_animation(lua_State *L)
 	bool frame_loop = true;
 
 	sao->getAnimation(&frames, &frame_speed, &frame_blend, &frame_loop);
+	push_v2f(L, frames);
+	lua_pushnumber(L, frame_speed);
+	lua_pushnumber(L, frame_blend);
+	lua_pushboolean(L, frame_loop);
+	return 4;
+}
+
+//7-1+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_animation(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+	if (sao == nullptr)
+		return 0;
+
+	v2f frames = v2f(1, 1);
+	float frame_speed = 15;
+	float frame_blend = 0;
+	bool frame_loop = true;
+
+	nativeObjectRef::n_get_animation(sao, &frames, &frame_speed, &frame_blend, &frame_loop);
 	push_v2f(L, frames);
 	lua_pushnumber(L, frame_speed);
 	lua_pushnumber(L, frame_blend);
@@ -442,6 +749,29 @@ int ObjectRef::l_set_local_animation(lua_State *L)
 	return 1;
 }
 
+//7-1+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_local_animation(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	RemotePlayer *player = getplayer(ref);
+	if (player == nullptr)
+		return 0;
+
+	v2s32 frames[4];
+	for (int i = 0; i < 4; i++) {
+		if (!lua_isnil(L, 2 + i))
+			frames[i] = read_v2s32(L, 2 + i);
+	}
+	float frame_speed = readParam<float>(L, 6, 30.0f);
+
+	// Call the C++ function with native interface
+	nativeObjectRef::n_set_local_animation(player, frames, frame_speed);
+
+	lua_pushboolean(L, true);
+	return 1;
+}
+
 // get_local_animation(self)
 int ObjectRef::l_get_local_animation(lua_State *L)
 {
@@ -461,6 +791,28 @@ int ObjectRef::l_get_local_animation(lua_State *L)
 
 	lua_pushnumber(L, frame_speed);
 	return 5;
+}
+
+//7-1+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_local_animation(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    RemotePlayer *player = getplayer(ref);
+    if (player == nullptr)
+        return 0;
+
+    std::pair<std::array<v2s32, 4>, float> animationInfo = nativeObjectRef::n_get_local_animation(player);
+
+    const std::array<v2s32, 4> &frames = animationInfo.first;
+    float frame_speed = animationInfo.second;
+
+    for (const v2s32 &frame : frames) {
+        push_v2s32(L, frame);
+    }
+
+    lua_pushnumber(L, frame_speed);
+    return 5;
 }
 
 // set_eye_offset(self, firstperson, thirdperson)
@@ -486,6 +838,29 @@ int ObjectRef::l_set_eye_offset(lua_State *L)
 	return 1;
 }
 
+//7-1+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_eye_offset(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    RemotePlayer *player = getplayer(ref);
+    if (player == nullptr)
+        return 0;
+
+    v3f offset_first = readParam<v3f>(L, 2, v3f(0, 0, 0));
+    v3f offset_third = readParam<v3f>(L, 3, v3f(0, 0, 0));
+
+    // Prevent abuse of offset values (keep player always visible)
+    offset_third.X = rangelim(offset_third.X, -10, 10);
+    offset_third.Z = rangelim(offset_third.Z, -5, 5);
+    /* TODO: if possible: improve the camera collision detection to allow Y <= -1.5) */
+    offset_third.Y = rangelim(offset_third.Y, -10, 15); // 1.5*BS
+
+    nativeObjectRef::n_set_eye_offset(player, offset_first, offset_third);
+    lua_pushboolean(L, true);
+    return 1;
+}
+
 // get_eye_offset(self)
 int ObjectRef::l_get_eye_offset(lua_State *L)
 {
@@ -498,6 +873,23 @@ int ObjectRef::l_get_eye_offset(lua_State *L)
 	push_v3f(L, player->eye_offset_first);
 	push_v3f(L, player->eye_offset_third);
 	return 2;
+}
+
+//7-4+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_eye_offset(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	RemotePlayer *player = getplayer(ref);
+	if (player == nullptr)
+		return 0;
+
+	// Call the C++ function to get eye offset data
+	std::pair<v3f, v3f> eyeOffsets = nativeObjectRef::n_get_eye_offset(player);
+
+	push_v3f(L, eyeOffsets.first);  // Push first-person eye offset
+	push_v3f(L, eyeOffsets.second); // Push third-person eye offset
+	return 2; // Number of return values
 }
 
 // send_mapblock(self, pos)
@@ -513,6 +905,23 @@ int ObjectRef::l_send_mapblock(lua_State *L)
 
 	session_t peer_id = player->getPeerId();
 	bool r = getServer(L)->SendBlock(peer_id, pos);
+
+	lua_pushboolean(L, r);
+	return 1;
+}
+
+//7-4+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_send_mapblock(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	RemotePlayer *player = getplayer(ref);
+	if (player == nullptr)
+		return 0;
+
+	v3s16 pos = read_v3s16(L, 2);
+
+	bool r = nativeObjectRef::n_send_mapblock(ref, pos);
 
 	lua_pushboolean(L, r);
 	return 1;
@@ -537,6 +946,28 @@ int ObjectRef::l_set_animation_frame_speed(lua_State *L)
 	return 1;
 }
 
+//7-4+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_animation_frame_speed(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    if (!lua_isnil(L, 2))
+    {
+        float frame_speed = readParam<float>(L, 2);
+        nativeObjectRef::n_set_animation_frame_speed(sao, frame_speed);
+        lua_pushboolean(L, true);
+    }
+    else
+    {
+        lua_pushboolean(L, false);
+    }
+    return 1;
+}
+
 // set_bone_position(self, bone, position, rotation)
 int ObjectRef::l_set_bone_position(lua_State *L)
 {
@@ -554,6 +985,23 @@ int ObjectRef::l_set_bone_position(lua_State *L)
 	return 0;
 }
 
+//7-4+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_bone_position(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    std::string bone = readParam<std::string>(L, 2, "");
+    v3f position = readParam<v3f>(L, 3, v3f(0, 0, 0));
+    v3f rotation = readParam<v3f>(L, 4, v3f(0, 0, 0));
+
+    nativeObjectRef::n_set_bone_position(sao, bone, position, rotation);
+    return 0;
+}
+
 // get_bone_position(self, bone)
 int ObjectRef::l_get_bone_position(lua_State *L)
 {
@@ -568,6 +1016,26 @@ int ObjectRef::l_get_bone_position(lua_State *L)
 	v3f position = v3f(0, 0, 0);
 	v3f rotation = v3f(0, 0, 0);
 	sao->getBonePosition(bone, &position, &rotation);
+
+	push_v3f(L, position);
+	push_v3f(L, rotation);
+	return 2;
+}
+
+//7-4+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_bone_position(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+	if (sao == nullptr)
+		return 0;
+
+	std::string bone = readParam<std::string>(L, 2, "");
+
+	v3f position = v3f(0, 0, 0);
+	v3f rotation = v3f(0, 0, 0);
+	nativeObjectRef::n_get_bone_position(sao, bone, &position, &rotation);
 
 	push_v3f(L, position);
 	push_v3f(L, rotation);
@@ -609,6 +1077,41 @@ int ObjectRef::l_set_attach(lua_State *L)
 	return 0;
 }
 
+//7-8+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_attach(lua_State *L)
+{
+	GET_ENV_PTR;
+	ObjectRef *ref = checkobject(L, 1);
+	ObjectRef *parent_ref = checkobject(L, 2);
+	ServerActiveObject *sao = getobject(ref);
+	ServerActiveObject *parent = getobject(parent_ref);
+	if (sao == nullptr || parent == nullptr)
+		return 0;
+	if (sao == parent)
+		throw LuaError("ObjectRef::set_attach: attaching object to itself is not allowed.");
+
+	std::string bone = readParam<std::string>(L, 3, "");
+	v3f position = readParam<v3f>(L, 4, v3f(0, 0, 0));
+	v3f rotation = readParam<v3f>(L, 5, v3f(0, 0, 0));
+	bool force_visible = readParam<bool>(L, 6, false);
+
+	std::tuple<bool, std::string, v3f, v3f, bool> result =
+		nativeObjectRef::n_set_attach(sao, parent, bone, position, rotation, force_visible);
+
+	if (std::get<0>(result)) {
+		const std::string &current_bone = std::get<1>(result);
+		const v3f &current_position = std::get<2>(result);
+		const v3f &current_rotation = std::get<3>(result);
+		bool current_force_visible = std::get<4>(result);
+
+		// Do something with the current attachment values if needed
+
+		return 1;
+	}
+
+	return 0;
+}
+
 // get_attach(self)
 int ObjectRef::l_get_attach(lua_State *L)
 {
@@ -637,6 +1140,34 @@ int ObjectRef::l_get_attach(lua_State *L)
 	return 5;
 }
 
+//7-9+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_attach(lua_State *L)
+{
+    GET_ENV_PTR;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    int parent_id;
+    std::string bone;
+    v3f position;
+    v3f rotation;
+    bool force_visible;
+
+    int result = nativeObjectRef::n_get_attach(sao, &parent_id, &bone, &position, &rotation, &force_visible);
+    if (result == 0)
+        return 0;
+
+    ServerActiveObject *parent = env->getActiveObject(parent_id);
+    getScriptApiBase(L)->objectrefGetOrCreate(L, parent);
+    lua_pushlstring(L, bone.c_str(), bone.size());
+    push_v3f(L, position);
+    push_v3f(L, rotation);
+    lua_pushboolean(L, force_visible);
+    return 5;
+}
+
 // get_children(self)
 int ObjectRef::l_get_children(lua_State *L)
 {
@@ -658,6 +1189,27 @@ int ObjectRef::l_get_children(lua_State *L)
 	return 1;
 }
 
+//7-9+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_children(lua_State *L)
+{
+    GET_ENV_PTR;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    std::unordered_set<int> child_ids = nativeObjectRef::n_get_children(sao);
+    int i = 0;
+
+    lua_createtable(L, child_ids.size(), 0);
+    for (const int id : child_ids) {
+        ServerActiveObject *child = env->getActiveObject(id);
+        getScriptApiBase(L)->objectrefGetOrCreate(L, child);
+        lua_rawseti(L, -2, ++i);
+    }
+    return 1;
+}
+
 // set_detach(self)
 int ObjectRef::l_set_detach(lua_State *L)
 {
@@ -669,6 +1221,19 @@ int ObjectRef::l_set_detach(lua_State *L)
 
 	sao->clearParentAttachment();
 	return 0;
+}
+
+//7-9+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_detach(lua_State *L)
+{
+    GET_ENV_PTR;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+	nativeObjectRef::n_set_detach(sao);
+    return 0;
 }
 
 // set_properties(self, properties)
@@ -689,6 +1254,25 @@ int ObjectRef::l_set_properties(lua_State *L)
 	return 0;
 }
 
+
+//7-14+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_properties(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    ObjectProperties prop;
+    read_object_properties(L, 2, sao, &prop, getServer(L)->idef());
+    
+    nativeObjectRef::n_set_properties(sao, prop);
+
+    return 0;
+}
+
 // get_properties(self)
 int ObjectRef::l_get_properties(lua_State *L)
 {
@@ -706,6 +1290,27 @@ int ObjectRef::l_get_properties(lua_State *L)
 	return 1;
 }
 
+//7-14+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_properties(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+	if (sao == nullptr)
+		return 0;
+
+	ObjectProperties *prop = sao->accessObjectProperties();
+	if (prop == nullptr)
+		return 0;
+
+	std::pair<bool, ObjectProperties*> propertiesPair = nativeObjectRef::n_get_properties(sao);
+	if (!propertiesPair.first)
+		return 0;
+
+	push_object_properties(L, propertiesPair.second);
+	return 1;
+}
+
 // is_player(self)
 int ObjectRef::l_is_player(lua_State *L)
 {
@@ -714,6 +1319,16 @@ int ObjectRef::l_is_player(lua_State *L)
 	RemotePlayer *player = getplayer(ref);
 	lua_pushboolean(L, (player != nullptr));
 	return 1;
+}
+
+//7-20+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_is_player(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    bool isPlayer = nativeModApiObject::n_is_player(ref);
+    lua_pushboolean(L, isPlayer);
+    return 1;
 }
 
 // set_nametag_attributes(self, attributes)
@@ -757,6 +1372,54 @@ int ObjectRef::l_set_nametag_attributes(lua_State *L)
 	return 1;
 }
 
+//7-20+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_nametag_attributes(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+	if (sao == nullptr)
+		return 0;
+
+	ObjectProperties *prop = sao->accessObjectProperties();
+	if (prop == nullptr)
+		return 0;
+
+	video::SColor nametag_color = prop->nametag_color;
+	video::SColor nametag_bgcolor = prop->nametag_bgcolor.value_or(video::SColor(0, 0, 0, 0));
+	std::string nametag = prop->nametag;
+
+	lua_getfield(L, 2, "color");
+	if (!lua_isnil(L, -1)) {
+		video::SColor color = nametag_color;
+		read_color(L, -1, &color);
+		nametag_color = color;
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "bgcolor");
+	if (!lua_isnil(L, -1)) {
+		if (lua_toboolean(L, -1)) {
+			video::SColor color;
+			if (read_color(L, -1, &color))
+				nametag_bgcolor = color;
+		} else {
+			nametag_bgcolor = video::SColor(0, 0, 0, 0);
+		}
+	}
+	lua_pop(L, 1);
+
+	nametag = getstringfield_default(L, 2, "text", nametag);
+
+	bool success = nativeObjectRef::n_set_nametag_attributes(sao, nametag_color, nametag_bgcolor, nametag);
+
+	if (success)
+		sao->notifyObjectPropertiesModified();
+
+	lua_pushboolean(L, success);
+	return 1;
+}
+
 // get_nametag_attributes(self)
 int ObjectRef::l_get_nametag_attributes(lua_State *L)
 {
@@ -791,6 +1454,42 @@ int ObjectRef::l_get_nametag_attributes(lua_State *L)
 	return 1;
 }
 
+//7-21+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_nametag_attributes(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	ObjectRef *ref = checkobject(L, 1);
+	ServerActiveObject *sao = getobject(ref);
+	if (sao == nullptr)
+		return 0;
+
+	std::tuple<bool, Color, bool, Color, std::string> attributes = nativeObjectRef::n_get_nametag_attributes(sao);
+
+	if (!std::get<0>(attributes))
+		return 0;
+
+	lua_newtable(L);
+
+	push_ARGB8(L, std::get<1>(attributes));
+	lua_setfield(L, -2, "color");
+
+	if (std::get<2>(attributes))
+	{
+		push_ARGB8(L, std::get<3>(attributes));
+		lua_setfield(L, -2, "bgcolor");
+	}
+	else
+	{
+		lua_pushboolean(L, false);
+		lua_setfield(L, -2, "bgcolor");
+	}
+
+	lua_pushstring(L, std::get<4>(attributes).c_str());
+	lua_setfield(L, -2, "text");
+
+	return 1;
+}
+
 /* LuaEntitySAO-only */
 
 // set_velocity(self, velocity)
@@ -806,6 +1505,17 @@ int ObjectRef::l_set_velocity(lua_State *L)
 
 	sao->setVelocity(vel);
 	return 0;
+}
+
+//7-21+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_velocity(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    v3f vel = checkFloatPos(L, 2);
+
+    nativeObjectRef::n_set_velocity(ref, vel);
+    return 0;
 }
 
 // add_velocity(self, velocity)
@@ -829,6 +1539,31 @@ int ObjectRef::l_add_velocity(lua_State *L)
 	}
 
 	return 0;
+}
+
+//7-29+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_add_velocity(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    v3f vel = checkFloatPos(L, 2);
+
+    if (sao->getType() == ACTIVEOBJECT_TYPE_LUAENTITY)
+    {
+        LuaEntitySAO *entitysao = dynamic_cast<LuaEntitySAO*>(sao);
+        nativeObjectRef::n_add_velocity_lua_entity(entitysao, vel);
+    }
+    else if (sao->getType() == ACTIVEOBJECT_TYPE_PLAYER)
+    {
+        PlayerSAO *playersao = dynamic_cast<PlayerSAO*>(sao);
+        nativeObjectRef::n_add_velocity_player_sao(playersao, vel);
+    }
+
+    return 0;
 }
 
 // get_velocity(self)
@@ -855,6 +1590,20 @@ int ObjectRef::l_get_velocity(lua_State *L)
 	return 1;
 }
 
+//7-29+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_velocity(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    ServerActiveObject *sao = getobject(ref);
+    if (sao == nullptr)
+        return 0;
+
+    v3f vel = nativeObjectRef::n_get_velocity(sao);
+    pushFloatPos(L, vel);
+    return 1;
+}
+
 // set_acceleration(self, acceleration)
 int ObjectRef::l_set_acceleration(lua_State *L)
 {
@@ -868,6 +1617,17 @@ int ObjectRef::l_set_acceleration(lua_State *L)
 
 	entitysao->setAcceleration(acceleration);
 	return 0;
+}
+
+//7-29+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_set_acceleration(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    v3f acceleration = checkFloatPos(L, 2);
+
+    nativeObjectRef::n_set_acceleration(ref, acceleration);
+    return 0;
 }
 
 // get_acceleration(self)
@@ -884,6 +1644,21 @@ int ObjectRef::l_get_acceleration(lua_State *L)
 	return 1;
 }
 
+//8-3+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ObjectRef::l_native_get_acceleration(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+    ObjectRef *ref = checkobject(L, 1);
+    LuaEntitySAO *entitysao = getluaobject(ref);
+    if (entitysao == nullptr)
+        return 0;
+
+    v3f acceleration = nativeObjectRef::n_get_acceleration(entitysao);
+
+    pushFloatPos(L, acceleration);
+    return 1;
+}
+
 // set_rotation(self, rotation)
 int ObjectRef::l_set_rotation(lua_State *L)
 {
@@ -897,6 +1672,19 @@ int ObjectRef::l_set_rotation(lua_State *L)
 
 	entitysao->setRotation(rotation);
 	return 0;
+}
+
+//8-3+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+int ModApiObjectRef::l_native_set_rotation(lua_State *L)
+{
+    NO_MAP_LOCK_REQUIRED;
+
+    ObjectRef *ref = checkobject(L, 1);
+    v3f rotation = check_v3f(L, 2);
+
+    nativeObjectRef::n_set_rotation(ref, rotation);
+
+    return 0;
 }
 
 // get_rotation(self)
@@ -2317,111 +3105,301 @@ void ObjectRef::Register(lua_State *L)
 
 const char ObjectRef::className[] = "ObjectRef";
 luaL_Reg ObjectRef::methods[] = {
-	// ServerActiveObject
-	luamethod(ObjectRef, remove),
-	luamethod_aliased(ObjectRef, get_pos, getpos),
-	luamethod_aliased(ObjectRef, set_pos, setpos),
-	luamethod_aliased(ObjectRef, move_to, moveto),
-	luamethod(ObjectRef, punch),
-	luamethod(ObjectRef, right_click),
-	luamethod(ObjectRef, set_hp),
-	luamethod(ObjectRef, get_hp),
-	luamethod(ObjectRef, get_inventory),
-	luamethod(ObjectRef, get_wield_list),
-	luamethod(ObjectRef, get_wield_index),
-	luamethod(ObjectRef, get_wielded_item),
-	luamethod(ObjectRef, set_wielded_item),
-	luamethod(ObjectRef, set_armor_groups),
-	luamethod(ObjectRef, get_armor_groups),
-	luamethod(ObjectRef, set_animation),
-	luamethod(ObjectRef, get_animation),
-	luamethod(ObjectRef, set_animation_frame_speed),
-	luamethod(ObjectRef, set_bone_position),
-	luamethod(ObjectRef, get_bone_position),
-	luamethod(ObjectRef, set_attach),
-	luamethod(ObjectRef, get_attach),
-	luamethod(ObjectRef, get_children),
-	luamethod(ObjectRef, set_detach),
-	luamethod(ObjectRef, set_properties),
-	luamethod(ObjectRef, get_properties),
-	luamethod(ObjectRef, set_nametag_attributes),
-	luamethod(ObjectRef, get_nametag_attributes),
+    // ServerActiveObject
+    luamethod(ObjectRef, remove),
+    luamethod(ObjectRef, native_remove),
 
-	luamethod_aliased(ObjectRef, set_velocity, setvelocity),
-	luamethod_aliased(ObjectRef, add_velocity, add_player_velocity),
-	luamethod_aliased(ObjectRef, get_velocity, getvelocity),
-	luamethod_dep(ObjectRef, get_velocity, get_player_velocity),
+    luamethod_aliased(ObjectRef, get_pos, getpos),
+    luamethod(ObjectRef, native_get_pos),
+    
+    luamethod(ObjectRef, native_set_pos),
 
-	// LuaEntitySAO-only
-	luamethod_aliased(ObjectRef, set_acceleration, setacceleration),
-	luamethod_aliased(ObjectRef, get_acceleration, getacceleration),
-	luamethod_aliased(ObjectRef, set_yaw, setyaw),
-	luamethod_aliased(ObjectRef, get_yaw, getyaw),
-	luamethod(ObjectRef, set_rotation),
-	luamethod(ObjectRef, get_rotation),
-	luamethod_aliased(ObjectRef, set_texture_mod, settexturemod),
-	luamethod(ObjectRef, get_texture_mod),
-	luamethod_aliased(ObjectRef, set_sprite, setsprite),
-	luamethod(ObjectRef, get_entity_name),
-	luamethod(ObjectRef, get_luaentity),
+    luamethod(ObjectRef, punch),
+    luamethod(ObjectRef, native_punch),
 
-	// Player-only
-	luamethod(ObjectRef, is_player),
-	luamethod(ObjectRef, get_player_name),
-	luamethod(ObjectRef, get_look_dir),
-	luamethod(ObjectRef, get_look_pitch),
-	luamethod(ObjectRef, get_look_yaw),
-	luamethod(ObjectRef, get_look_vertical),
-	luamethod(ObjectRef, get_look_horizontal),
-	luamethod(ObjectRef, set_look_horizontal),
-	luamethod(ObjectRef, set_look_vertical),
-	luamethod(ObjectRef, set_look_yaw),
-	luamethod(ObjectRef, set_look_pitch),
-	luamethod(ObjectRef, get_fov),
-	luamethod(ObjectRef, set_fov),
-	luamethod(ObjectRef, get_breath),
-	luamethod(ObjectRef, set_breath),
-	luamethod(ObjectRef, get_attribute),
-	luamethod(ObjectRef, set_attribute),
-	luamethod(ObjectRef, get_meta),
-	luamethod(ObjectRef, set_inventory_formspec),
-	luamethod(ObjectRef, get_inventory_formspec),
-	luamethod(ObjectRef, set_formspec_prepend),
-	luamethod(ObjectRef, get_formspec_prepend),
-	luamethod(ObjectRef, get_player_control),
-	luamethod(ObjectRef, get_player_control_bits),
-	luamethod(ObjectRef, set_physics_override),
-	luamethod(ObjectRef, get_physics_override),
-	luamethod(ObjectRef, hud_add),
-	luamethod(ObjectRef, hud_remove),
-	luamethod(ObjectRef, hud_change),
-	luamethod(ObjectRef, hud_get),
-	luamethod(ObjectRef, hud_set_flags),
-	luamethod(ObjectRef, hud_get_flags),
-	luamethod(ObjectRef, hud_set_hotbar_itemcount),
-	luamethod(ObjectRef, hud_get_hotbar_itemcount),
-	luamethod(ObjectRef, hud_set_hotbar_image),
-	luamethod(ObjectRef, hud_get_hotbar_image),
-	luamethod(ObjectRef, hud_set_hotbar_selected_image),
-	luamethod(ObjectRef, hud_get_hotbar_selected_image),
-	luamethod(ObjectRef, set_sky),
-	luamethod(ObjectRef, get_sky),
-	luamethod(ObjectRef, get_sky_color),
-	luamethod(ObjectRef, set_sun),
-	luamethod(ObjectRef, get_sun),
-	luamethod(ObjectRef, set_moon),
-	luamethod(ObjectRef, get_moon),
-	luamethod(ObjectRef, set_stars),
-	luamethod(ObjectRef, get_stars),
-	luamethod(ObjectRef, set_clouds),
-	luamethod(ObjectRef, get_clouds),
-	luamethod(ObjectRef, override_day_night_ratio),
-	luamethod(ObjectRef, get_day_night_ratio),
-	luamethod(ObjectRef, set_local_animation),
-	luamethod(ObjectRef, get_local_animation),
-	luamethod(ObjectRef, set_eye_offset),
-	luamethod(ObjectRef, get_eye_offset),
-	luamethod(ObjectRef, send_mapblock),
-	luamethod(ObjectRef, set_minimap_modes),
-	{0,0}
+    luamethod(ObjectRef, right_click),
+    luamethod(ObjectRef, native_right_click),
+
+    luamethod(ObjectRef, set_hp),
+    luamethod(ObjectRef, native_set_hp),
+
+    luamethod(ObjectRef, get_hp),
+    luamethod(ObjectRef, native_get_hp),
+
+    luamethod(ObjectRef, get_inventory),
+    luamethod(ObjectRef, native_get_inventory),
+
+    luamethod(ObjectRef, get_wield_list),
+    luamethod(ObjectRef, native_get_wield_list),
+
+    luamethod(ObjectRef, get_wield_index),
+    luamethod(ObjectRef, native_get_wield_index),
+
+    luamethod(ObjectRef, get_wielded_item),
+    luamethod(ObjectRef, native_get_wielded_item),
+
+    luamethod(ObjectRef, set_wielded_item),
+    luamethod(ObjectRef, native_set_wielded_item),
+
+    luamethod(ObjectRef, set_armor_groups),
+    luamethod(ObjectRef, native_set_armor_groups),
+
+    luamethod(ObjectRef, get_armor_groups),
+    luamethod(ObjectRef, native_get_armor_groups),
+
+    luamethod(ObjectRef, set_animation),
+    luamethod(ObjectRef, native_set_animation),
+
+    luamethod(ObjectRef, get_animation),
+    luamethod(ObjectRef, native_get_animation),
+
+    luamethod(ObjectRef, set_animation_frame_speed),
+    luamethod(ObjectRef, native_set_animation_frame_speed),
+
+    luamethod(ObjectRef, set_bone_position),
+    luamethod(ObjectRef, native_set_bone_position),
+
+    luamethod(ObjectRef, get_bone_position),
+    luamethod(ObjectRef, native_get_bone_position),
+
+    luamethod(ObjectRef, set_attach),
+    luamethod(ObjectRef, native_set_attach),
+
+    luamethod(ObjectRef, get_attach),
+    luamethod(ObjectRef, native_get_attach),
+
+    luamethod(ObjectRef, get_children),
+    luamethod(ObjectRef, native_get_children),
+
+    luamethod(ObjectRef, set_detach),
+    luamethod(ObjectRef, native_set_detach),
+
+    luamethod(ObjectRef, set_properties),
+    luamethod(ObjectRef, native_set_properties),
+
+    luamethod(ObjectRef, get_properties),
+    luamethod(ObjectRef, native_get_properties),
+
+    luamethod(ObjectRef, set_nametag_attributes),
+    luamethod(ObjectRef, native_set_nametag_attributes),
+
+    luamethod(ObjectRef, get_nametag_attributes),
+    luamethod(ObjectRef, native_get_nametag_attributes),
+
+    luamethod_aliased(ObjectRef, set_velocity, setvelocity),
+    luamethod(ObjectRef, native_set_velocity),
+
+    luamethod_aliased(ObjectRef, add_velocity, add_player_velocity),
+    luamethod(ObjectRef, native_add_velocity),
+
+    luamethod_aliased(ObjectRef, get_velocity, getvelocity),
+    luamethod(ObjectRef, native_get_velocity),
+
+    // LuaEntitySAO-only
+    luamethod_aliased(ObjectRef, set_acceleration, setacceleration),
+    luamethod(ObjectRef, native_set_acceleration),
+
+    luamethod_aliased(ObjectRef, get_acceleration, getacceleration),
+    luamethod(ObjectRef, native_get_acceleration),
+
+    luamethod_aliased(ObjectRef, set_yaw, setyaw),
+    luamethod(ObjectRef, native_set_yaw),
+
+    luamethod_aliased(ObjectRef, get_yaw, getyaw),
+    luamethod(ObjectRef, native_get_yaw),
+
+    luamethod(ObjectRef, set_rotation),
+    luamethod(ObjectRef, native_set_rotation),
+
+    luamethod(ObjectRef, get_rotation),
+    luamethod(ObjectRef, native_get_rotation),
+
+    luamethod_aliased(ObjectRef, set_texture_mod, settexturemod),
+    luamethod(ObjectRef, native_set_texture_mod),
+
+    luamethod(ObjectRef, get_texture_mod),
+    luamethod(ObjectRef, native_get_texture_mod),
+
+    luamethod_aliased(ObjectRef, set_sprite, setsprite),
+    luamethod(ObjectRef, native_set_sprite),
+
+    luamethod(ObjectRef, get_entity_name),
+    luamethod(ObjectRef, native_get_entity_name),
+
+    luamethod(ObjectRef, get_luaentity),
+    luamethod(ObjectRef, native_get_luaentity),
+
+    // Player-only
+    luamethod(ObjectRef, is_player),
+    luamethod(ObjectRef, native_is_player),
+
+    luamethod(ObjectRef, get_player_name),
+    luamethod(ObjectRef, native_get_player_name),
+
+    luamethod(ObjectRef, get_look_dir),
+    luamethod(ObjectRef, native_get_look_dir),
+
+    luamethod(ObjectRef, get_look_pitch),
+    luamethod(ObjectRef, native_get_look_pitch),
+
+    luamethod(ObjectRef, get_look_yaw),
+    luamethod(ObjectRef, native_get_look_yaw),
+
+    luamethod(ObjectRef, get_look_vertical),
+    luamethod(ObjectRef, native_get_look_vertical),
+
+    luamethod(ObjectRef, get_look_horizontal),
+    luamethod(ObjectRef, native_get_look_horizontal),
+
+    luamethod(ObjectRef, set_look_horizontal),
+    luamethod(ObjectRef, native_set_look_horizontal),
+
+    luamethod(ObjectRef, set_look_vertical),
+    luamethod(ObjectRef, native_set_look_vertical),
+
+    luamethod(ObjectRef, set_look_yaw),
+    luamethod(ObjectRef, native_set_look_yaw),
+
+    luamethod(ObjectRef, set_look_pitch),
+    luamethod(ObjectRef, native_set_look_pitch),
+
+    luamethod(ObjectRef, get_fov),
+    luamethod(ObjectRef, native_get_fov),
+
+    luamethod(ObjectRef, set_fov),
+    luamethod(ObjectRef, native_set_fov),
+
+    luamethod(ObjectRef, get_breath),
+    luamethod(ObjectRef, native_get_breath),
+
+    luamethod(ObjectRef, set_breath),
+    luamethod(ObjectRef, native_set_breath),
+
+    luamethod(ObjectRef, get_attribute),
+    luamethod(ObjectRef, native_get_attribute),
+
+    luamethod(ObjectRef, set_attribute),
+    luamethod(ObjectRef, native_set_attribute),
+
+    luamethod(ObjectRef, get_meta),
+    luamethod(ObjectRef, native_get_meta),
+
+    luamethod(ObjectRef, set_inventory_formspec),
+    luamethod(ObjectRef, native_set_inventory_formspec),
+
+    luamethod(ObjectRef, get_inventory_formspec),
+    luamethod(ObjectRef, native_get_inventory_formspec),
+
+    luamethod(ObjectRef, set_formspec_prepend),
+    luamethod(ObjectRef, native_set_formspec_prepend),
+
+    luamethod(ObjectRef, get_formspec_prepend),
+    luamethod(ObjectRef, native_get_formspec_prepend),
+
+    luamethod(ObjectRef, get_player_control),
+    luamethod(ObjectRef, native_get_player_control),
+
+    luamethod(ObjectRef, get_player_control_bits),
+    luamethod(ObjectRef, native_get_player_control_bits),
+
+    luamethod(ObjectRef, set_physics_override),
+    luamethod(ObjectRef, native_set_physics_override),
+
+    luamethod(ObjectRef, get_physics_override),
+    luamethod(ObjectRef, native_get_physics_override),
+
+    luamethod(ObjectRef, hud_add),
+    luamethod(ObjectRef, native_hud_add),
+
+    luamethod(ObjectRef, hud_remove),
+    luamethod(ObjectRef, native_hud_remove),
+
+    luamethod(ObjectRef, hud_change),
+    luamethod(ObjectRef, native_hud_change),
+
+    luamethod(ObjectRef, hud_get),
+    luamethod(ObjectRef, native_hud_get),
+
+    luamethod(ObjectRef, hud_set_flags),
+    luamethod(ObjectRef, native_hud_set_flags),
+
+    luamethod(ObjectRef, hud_get_flags),
+    luamethod(ObjectRef, native_hud_get_flags),
+
+    luamethod(ObjectRef, hud_set_hotbar_itemcount),
+    luamethod(ObjectRef, native_hud_set_hotbar_itemcount),
+
+    luamethod(ObjectRef, hud_get_hotbar_itemcount),
+    luamethod(ObjectRef, native_hud_get_hotbar_itemcount),
+
+    luamethod(ObjectRef, hud_set_hotbar_image),
+    luamethod(ObjectRef, native_hud_set_hotbar_image),
+
+    luamethod(ObjectRef, hud_get_hotbar_image),
+    luamethod(ObjectRef, native_hud_get_hotbar_image),
+
+    luamethod(ObjectRef, hud_set_hotbar_selected_image),
+    luamethod(ObjectRef, native_hud_set_hotbar_selected_image),
+
+    luamethod(ObjectRef, hud_get_hotbar_selected_image),
+    luamethod(ObjectRef, native_hud_get_hotbar_selected_image),
+
+    luamethod(ObjectRef, set_sky),
+    luamethod(ObjectRef, native_set_sky),
+
+    luamethod(ObjectRef, get_sky),
+    luamethod(ObjectRef, native_get_sky),
+
+    luamethod(ObjectRef, get_sky_color),
+    luamethod(ObjectRef, native_get_sky_color),
+
+    luamethod(ObjectRef, set_sun),
+    luamethod(ObjectRef, native_set_sun),
+
+    luamethod(ObjectRef, get_sun),
+    luamethod(ObjectRef, native_get_sun),
+
+    luamethod(ObjectRef, set_moon),
+    luamethod(ObjectRef, native_set_moon),
+
+    luamethod(ObjectRef, get_moon),
+    luamethod(ObjectRef, native_get_moon),
+
+    luamethod(ObjectRef, set_stars),
+    luamethod(ObjectRef, native_set_stars),
+
+    luamethod(ObjectRef, get_stars),
+    luamethod(ObjectRef, native_get_stars),
+
+    luamethod(ObjectRef, set_clouds),
+    luamethod(ObjectRef, native_set_clouds),
+
+    luamethod(ObjectRef, get_clouds),
+    luamethod(ObjectRef, native_get_clouds),
+
+    luamethod(ObjectRef, override_day_night_ratio),
+    luamethod(ObjectRef, native_override_day_night_ratio),
+
+    luamethod(ObjectRef, get_day_night_ratio),
+    luamethod(ObjectRef, native_get_day_night_ratio),
+
+    luamethod(ObjectRef, set_local_animation),
+    luamethod(ObjectRef, native_set_local_animation),
+
+    luamethod(ObjectRef, get_local_animation),
+    luamethod(ObjectRef, native_get_local_animation),
+
+    luamethod(ObjectRef, set_eye_offset),
+    luamethod(ObjectRef, native_set_eye_offset),
+
+    luamethod(ObjectRef, get_eye_offset),
+    luamethod(ObjectRef, native_get_eye_offset),
+
+    luamethod(ObjectRef, send_mapblock),
+    luamethod(ObjectRef, native_send_mapblock),
+
+    luamethod(ObjectRef, set_minimap_modes),
+    luamethod(ObjectRef, native_set_minimap_modes),
+
+    {0,0}
 };

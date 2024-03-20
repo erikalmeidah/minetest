@@ -1,0 +1,7 @@
+6/4/2023
+
+Retrieved old data from github repros, lots of my data had been overwritten when branching. Also rewrote some functions to esnure they work now
+
+Decided to do object as it seems like aproject that will take time and I can do it offline/without testing.
+
+Object has 95 functions that need to be rewritten

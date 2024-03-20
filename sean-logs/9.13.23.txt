@@ -1,0 +1,9 @@
+Troubleshooting Laptop build, getting random build errors.
+
+Relinked Spidermonkey 5-6 times and redid all the manual coding.
+
+Compiled in Active(Debug) x64 and Debug x64
+
+Helped Alice with getting a working build
+
+Got build working

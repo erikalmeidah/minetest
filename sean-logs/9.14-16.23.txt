@@ -1,0 +1,33 @@
+9/14
+Add native_object.cpp and header
+Add to native CMAKE file
+
+src/script/
+server_test.lua -> add mod
+
+minetest.luaentities
+
+9/15
+Diagnose Object Ref
+https://minetest.gitlab.io/minetest/class-reference/
+
+Mods will work when ObjectRef can be recreated in Lua
+
+When adding native mod, add to className[] = "ObjectRef"
+
+Idea to bring up in meeting:
+Swig and Lua??
+
+Created test for 
+l_set_pos
+native_set_pos
+l_get_pos
+native_get_pos
+l_remove
+native_remove
+
+9/16
+l_move_to
+native_move_to
+l_punch
+native_punch

@@ -1,0 +1,29 @@
+6/17/2023
+
+Created outlines for:
+
+l_punch
+created:
+n_punch
+l_native_punch
+
+l_right_click
+created:
+n_right_click
+l_native_right_click
+This one does not seem like there is any non-dependent functions avaliable
+
+l_set_hp
+created:
+n_set_hp
+l_native_set_hp
+
+l_get_hp
+created:
+n_get_hp
+l_native_get_hp
+
+l_get_inventory
+created:
+n_get_inventory
+l_native_get_inventory

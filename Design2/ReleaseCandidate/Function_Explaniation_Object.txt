@@ -1,0 +1,151 @@
+ObjectRef::checkobject: This function is essential for ensuring the validity of the Lua object being referenced. It checks whether the Lua argument at a specified index is of the expected USERDATA type and confirms the data's alignment with the class name. If the check passes, it returns an unboxed pointer to the ObjectRef object.
+
+ObjectRef::getobject: 
+This function retrieves the ServerActiveObject associated with a given ObjectRef. If the server-active object has already been marked as 'gone' or does not exist, the function returns a null pointer.
+
+ObjectRef::getluaobject: 
+This function tries to get a Lua Entity from a given ObjectRef. If the associated server-active object isn't a Lua Entity, it returns a null pointer.
+
+ObjectRef::getplayersao: 
+It fetches the ServerActiveObject for a player. If the referenced object isn't associated with a player, a null pointer is returned.
+
+ObjectRef::getplayer: 
+Utilizing the getplayersao function, this function retrieves the RemotePlayer object for a player.
+
+ObjectRef::gc_object: 
+This is a garbage collection function. It cleans up by deleting the ObjectRef object when it's no longer needed by the Lua environment.
+
+ObjectRef::l_remove: 
+This function is tasked with removing server-active objects. If the object is a player type, it avoids the removal. For other types, it clears attachments and marks the object for deletion.
+
+ObjectRef::l_get_pos: 
+Fetches the position of the server-active object. The position is returned in terms of the game's base unit, scaled by the BS constant.
+
+ObjectRef::l_set_pos: 
+Sets the position of the server-active object to the specified position in the Lua state.
+
+ObjectRef::l_move_to: 
+Moves the server-active object to a new position. An additional boolean parameter, continuous, defines the movement type.
+
+ObjectRef::l_punch: 
+It simulates a punch action. An object can punch another, leading to potential damage, wear, or other effects. The function accounts for various parameters like the time from the last punch, tool capabilities, and the punch direction. If the health points (HP) of either the puncher or the punched change as a result, appropriate messages are sent to update their status.
+
+ObjectRef::l_right_click:
+Invokes the rightClick method for a server-active object (sao) on another object (sao2), simulating a right-click event. The function does nothing if either of the objects is non-existent.
+
+ObjectRef::l_set_hp:
+Sets the health points (HP) of a server-active object. It accepts a reason table as a parameter, which may contain detailed information about why the HP was modified. If the object whose HP is being set is a player and there's a change in HP, the server sends an HP update.
+
+ObjectRef::l_get_hp:
+Retrieves the HP of a server-active object. If the object is non-existent, it defaults to 1 HP.
+
+ObjectRef::l_get_inventory:
+Fetches the inventory of a server-active object, represented as an InventoryLocation. If the object has an inventory, it pushes this inventory to the Lua state; otherwise, it pushes nil (indicating no inventory).
+
+ObjectRef::l_get_wield_list:
+Retrieves the list of items that the server-active object is wielding (carrying).
+
+ObjectRef::l_get_wield_index:
+Gets the index of the currently wielded item for the server-active object. It pushes this index (incremented by 1 for Lua's 1-based indexing) to the Lua state.
+
+ObjectRef::l_get_wielded_item:
+Fetches the item that the server-active object is currently wielding. For non-existent objects, an empty ItemStack is returned.
+
+ObjectRef::l_set_wielded_item:
+Sets the item that the server-active object is wielding. If the object is a player and the item setting is successful, an inventory update is sent to the player.
+
+ObjectRef::l_set_armor_groups:
+Defines armor groups for a server-active object. If the object is a player and damage is globally disabled, then the function ensures the "immortal" group is set to 1 (indicating the player cannot be damaged). Armor groups can be thought of as the properties of an object or player that dictate how they react to different forms of damage (like fall damage, drowning, etc.)
+
+ObjectRef::l_get_armor_groups:
+Fetches the armor groups associated with a server-active object. If the object doesn't exist, it returns nothing.
+
+ObjectRef::l_set_animation:
+Sets the animation properties for a server-active object, including frame range, speed, blending, and loop information. If the object doesn't exist, no animation is set.
+
+ObjectRef::l_get_animation:
+Retrieves the current animation properties of a server-active object, which includes frame range, speed, blending, and loop status. If the object is non-existent, default values are used.
+
+ObjectRef::l_set_local_animation:
+Sets local animations for a remote player, specifying separate animations for different actions like idle, walk, digging, and walking while digging, as well as the frame speed. If the player doesn't exist, it returns nothing.
+
+ObjectRef::l_get_local_animation:
+Fetches the local animations of a remote player, detailing the animations for actions such as idle, walk, digging, and walking while digging, and the frame speed. If the player is non-existent, the function returns nothing.
+
+ObjectRef::l_set_eye_offset:
+Sets the offset of a remote player's viewpoint in both first-person and third-person perspectives. To avoid misuse, there are limits to the third-person offset values. If the player doesn't exist, no changes are made.
+
+ObjectRef::l_get_eye_offset:
+Fetches the eye offsets for first-person and third-person perspectives for a remote player. If the player doesn't exist, the function returns nothing.
+
+ObjectRef::l_send_mapblock:
+Sends a specific map block to a remote player. If the player doesn't exist, the function returns false. Otherwise, it returns true if the block is sent successfully.
+
+ObjectRef::l_set_animation_frame_speed:
+Sets the frame speed for the animation of a server-active object. If the object doesn't exist or the frame speed isn't provided, the function returns false. Otherwise, it returns true after successfully setting the speed.
+
+ObjectRef::l_set_bone_position:
+Adjusts the position and rotation of a specific bone of a server-active object. If the object or bone doesn't exist, no adjustments are made.
+
+ObjectRef::l_get_bone_position:
+Fetches the current position and rotation of a specific bone from a server-active object. If the object or bone doesn't exist, default values are used.
+
+ObjectRef::l_set_attach:
+Attaches one object (child) to another object (parent) with specified bone, position, rotation, and visibility attributes. If either object doesn't exist or if an object tries to attach to itself, an error is raised.
+
+ObjectRef::l_get_attach:
+Retrieves details about the parent object and the attachment properties of the current object. If the current object isn't attached to any parent, the function returns nothing. Otherwise, it returns the parent object, bone name, position, rotation, and force visibility status.
+
+ObjectRef::l_get_children:
+Fetches a list of child objects that are attached to the current object. If the object has no attached children, the function returns an empty list.
+
+ObjectRef::l_set_detach:
+This function detaches an object from whatever it might be attached to. If the object doesn't exist or it isn't attached to anything, no action is taken.
+
+ObjectRef::l_set_properties:
+Sets properties of a server-active object. These properties might include a variety of settings like visual appearance, physics properties, etc. If the object or its properties cannot be accessed, no changes are made.
+
+ObjectRef::l_get_properties:
+Retrieves the properties of a server-active object. If the object or its properties cannot be accessed, the function returns nothing.
+
+ObjectRef::l_is_player:
+Checks if the specified object is a player. It returns a boolean value, with true indicating that the object is a player.
+
+ObjectRef::l_set_nametag_attributes:
+Sets the attributes of a nametag associated with an object. These attributes include the color, background color, and text of the nametag. If the object or its properties cannot be accessed, no changes are made, and the function returns false. Otherwise, it returns true.
+
+ObjectRef::l_get_nametag_attributes:
+Retrieves the attributes of a nametag associated with an object. These attributes include the color, background color, and text of the nametag. If the object or its nametag properties cannot be accessed, the function returns nothing.
+
+ObjectRef::l_set_velocity:
+Sets the velocity of an entity in the game. This would likely change the movement speed and direction of the entity. If the entity doesn't exist, no changes are made.
+
+ObjectRef::l_add_velocity:
+Adds additional velocity to an object or entity. This would likely adjust its current speed and direction. Depending on the type of object (a LuaEntity or a Player), different actions are taken to apply the added velocity. If the object doesn't exist, no changes are made.
+
+ObjectRef::l_set_acceleration:
+Sets the acceleration of a LuaEntity. The acceleration determines how quickly the entity speeds up or slows down.
+
+ObjectRef::l_get_acceleration:
+Retrieves the acceleration of a LuaEntity. This tells how quickly the entity is changing its speed.
+
+ObjectRef::l_set_rotation:
+Sets the rotation of a LuaEntity. The given rotation value is converted from radians to degrees before being set.
+
+ObjectRef::l_get_rotation:
+Retrieves the rotation of a LuaEntity. The returned value is converted from degrees to radians. The rotation is then pushed to the Lua stack in a new table.
+
+ObjectRef::l_set_yaw:
+Sets the yaw (horizontal rotation around the vertical axis) of a LuaEntity. The yaw value is given in radians but is internally converted to degrees for setting.
+
+ObjectRef::l_get_yaw:
+Retrieves the yaw of a LuaEntity. The yaw value is converted from degrees to radians before being pushed to the Lua stack.
+
+ObjectRef::l_set_texture_mod:
+Modifies the texture of a LuaEntity. This might be used for effects like highlighting, coloring, or other visual changes to an entity's appearance.
+
+ObjectRef::l_get_texture_mod:
+Retrieves the current texture modification applied to a LuaEntity. This function returns the texture mod string.
+
+ObjectRef::l_set_sprite:
+Configures a LuaEntity's sprite animation. Parameters allow for specifying the starting frame, number of frames in the animation, how long each frame lasts, and whether the animation's X axis should be selected based on the camera's position.

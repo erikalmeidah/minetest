@@ -1,0 +1,86 @@
+10-1 
+4:00-6:00
+Created get_wield_list
+
+- Ex output:
+2023-10-01 20:56:33: [Server]: caught command 'lua_object_get_wield_list', issued by 'singleplayer'. Parameters: ''
+2023-10-01 20:56:33: [Server]: lua_object_get_weild_list is running!
+2023-10-01 20:56:33: [Server]: Size of Active Objects Array: 1
+2023-10-01 20:56:33: [Server]: The player's wield list is "main"
+
+Created get_wield_index
+
+- Ex output:
+
+Created get wielded item
+- Returns the item object you are holding in your hand
+- For demonstration purposes, I return the name of the object but you can access all object variables
+
+-Ex output:
+2023-10-01 20:57:08: [Server]: lua_object_get_weilded_item is running!
+2023-10-01 20:57:08: [Server]: Size of Active Objects Array: 1
+2023-10-01 20:57:08: [Server]: The player's wielded item is "basetools:pick_steel_l1"
+
+6:30-8:30
+Call with Chris to discuss deliverables:
+- Helped him with outputing a few functions
+- Fixed build errors
+
+Created set wielded item
+param "" - "input a param: \n 0 - null \n 1 - stone sword"
+param 0 - nil/nullptr
+param 1 - stone sword
+
+- Ex output:
+2023-10-01 20:57:16: [Server]: lua_object_set_weilded_item is running!
+2023-10-01 20:57:16: [Server]: Size of Active Objects Array: 1
+2023-10-01 20:57:16: [Server]: input a param: 
+ 0 - null 
+ 1 - stone sword
+2023-10-01 20:57:27: [Server]: lua_object_set_weilded_item is running!
+2023-10-01 20:57:27: [Server]: Size of Active Objects Array: 1
+2023-10-01 20:57:27: [Server]: The player's wielded item is true
+2023-10-01 20:57:32: [Server]: caught command 'lua_object_set_wielded_item', issued by 'singleplayer'. Parameters: '1'
+
+Created get armor groups
+
+- Ex output:
+
+2023-10-01 20:57:47: [Server]: caught command 'lua_object_get_armor_groups', issued by 'singleplayer'. Parameters: ''
+2023-10-01 20:57:47: [Server]: lua_object_get_weilded_item is running!
+2023-10-01 20:57:47: [Server]: Size of Active Objects Array: 1
+2023-10-01 20:57:47: [Server]: The player's armor group information is {
+	fleshy = 100
+}
+2023-10-01 20:57:47: [Server]: The player's armor group information is {
+	fleshy = 100
+}
+
+Created get eye offset
+
+- Ex output:
+
+2023-10-01 20:58:18: [Server]: lua_object_get_eye_offset is running!
+2023-10-01 20:58:18: [Server]: Size of Active Objects Array: 1
+2023-10-01 20:58:18: [Server]: The player's eye offset is {
+	y = 0,
+	z = 0,
+	x = 0
+}
+
+Created set eye offset
+
+- Ex output:
+
+2023-10-01 20:58:28: [Server]: caught command 'lua_object_set_eye_offset', issued by 'singleplayer'. Parameters: '100'
+2023-10-01 20:58:28: [Server]: lua_object_get_eye_offset is running!
+2023-10-01 20:58:28: [Server]: Size of Active Objects Array: 1
+2023-10-01 20:58:28: [Server]: The player's eye offset is now{
+	y = 100,
+	z = 0,
+	x = 0
+}
+
+8:30 - 9:30
+Created Documentation including a video log:
+https://youtu.be/M8OWgBsqMWg

@@ -1,0 +1,27 @@
+7/1/2023
+
+l_set_animation
+created:
+n_set_animation
+l_native_set_animation
+
+l_get_animation
+created:
+n_get_animation
+l_native_get_animation
+
+l_set_local_animation
+created:
+n_set_local_animation
+l_native_set_local_animation
+
+l_get_local_animation
+created:
+n_get_local_animation
+l_native_get_local_animation
+
+l_set_eye_offset
+created:
+n_set_eye_offset
+l_native_set_eye_offset
+This might not be changable

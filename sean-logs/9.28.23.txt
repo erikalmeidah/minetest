@@ -1,0 +1,5 @@
+Meeting With Carsten 10:40 - 11:10
+- Specific Deliverables for Beta Build
+- Create master branch for both Me and Chris
+- Doc/Documentation of everything completed since Beta Build
+- Video log showing all tests

@@ -39,8 +39,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 void ModApiHttp::read_http_fetch_request(lua_State *L, HTTPFetchRequest &req)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
-
+	//
 	req.caller = httpfetch_caller_alloc_secure();
+	//
 	getstringfield(L, 1, "url", req.url);
 	lua_getfield(L, 1, "user_agent");
 	if (lua_isstring(L, -1))

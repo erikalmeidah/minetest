@@ -1,0 +1,67 @@
+10-8
+Call With Erik - 9:30 - 11
+- Help with Native Testing 
+- New Function Names not Recognized in Mod 
+- Found issue was in the Object Ref Methods, all function names need to be announced
+- Tested by using c++ from the summer functions on native_remove and native_get_pos
+
+Added Functions:
+native_object_remove:
+
+Should remove ground entities or other server active objects that don't include the player
+
+Ex Output:
+2023-10-08 21:07:48: [Server]: native_object_remove is running!
+2023-10-08 21:07:48: [Server]: Size of saos: 2
+2023-10-08 21:07:48: WARNING[Server]: Deprecated call to "get_entity_name (at ...\bin\Debug\..\..\mods\testingnativeapi_server/object.lua:146)
+2023-10-08 21:07:48: [Server]: Removed: __builtin:item
+
+native_object_get_pos
+
+Should return the position of the player active object
+
+Ex Output:
+2023-10-08 21:07:57: [Server]: caught command 'native_object_get_pos', issued by 'singleplayer'. Parameters: ''
+2023-10-08 21:07:57: [Server]: native_object_get_pos is running!
+2023-10-08 21:07:57: [Server]: Size of saos: 1
+2023-10-08 21:07:57: [Server]: Position of first Reference Object: (99.546997070313,21.500999450684,20.130001068115)
+2023-10-08 21:07:59: ACTION[Main]: Server: Shutting down
+
+lua_object_send_mapblock
+
+Need to find trigger
+
+Ex Output:
+2023-10-08 21:11:44: [Server]: caught command 'lua_object_send_mapblock', issued by 'singleplayer'. Parameters: ''
+2023-10-08 21:11:44: [Server]: Sends an already loaded mapblock to the player.
+Returns false if nothing was sent (note that this can also mean that the client already has the block)
+Resource intensive - use sparsely
+2023-10-08 21:11:44: [Server]: Size of Active Objects Array: 1
+2023-10-08 21:11:44: [Server]: Mapblock was NOT sent to player. Responce:  false
+
+log_lua_object
+
+Automatically runs all lua_object functions within the file and returns success on successful run or fail with the failure reason in a txt file called "lua_object_results.txt"
+
+Ex Output:
+Command: lua_object_set_pos
+Result: Success
+
+Command: lua_object_punch
+Result: Error
+Output:
+...\bin\Debug\..\..\mods\testingnativeapi_server/object.lua:377: attempt to call method 'isplayer' (a nil value)
+
+Command: lua_object_right_click
+Result: Success
+
+Command: lua_object_set_hp
+Result: Success
+
+Command: lua_object_set_sun
+Result: Success
+
+Command: lua_object_get_hp
+Result: Success
+
+45/46 Tests Passed

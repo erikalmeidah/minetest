@@ -18,9 +18,10 @@ dofile(modpath .. "/particles.lua")
 dofile(modpath .. "/settings.lua")
 dofile(modpath .. "/noise.lua")
 dofile(modpath .. "/nodetimer.lua")
-dofile(modpath .. "/modchannels.lua")
-dofile(modpath .. "/itemstackmeta.lua")
-dofile(modpath .. "/metadata.lua")
+dofile(modpath .. "/rollback.lua")
+dofile(modpath .. "/object.lua")
+
+
 
 -- Load helper files
 dofile(modpath .. "/other.lua")

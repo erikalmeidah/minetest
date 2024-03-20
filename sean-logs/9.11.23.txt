@@ -1,0 +1,16 @@
+Error in build, reinstalling local files
+
+Issue with CMAKE:
+"
+CMake Error at src/CMakeLists.txt:97 (message):
+  Sound enabled, but cannot be used.
+
+  To continue, either fill in the required paths or disable sound.
+  (-DENABLE_SOUND=0)
+"
+
+Found a fix to install "libopenal-dev and libvorbis-dev"
+https://forums.minetest.org/viewtopic.php?f=6&t=6242
+
+Conda broken trying to install
+https://bobbyhadz.com/blog/solving-environment-failed-with-initial-frozen-solve-retrying

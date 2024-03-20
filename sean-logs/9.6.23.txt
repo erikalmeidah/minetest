@@ -1,0 +1,18 @@
+Meeting with Dr. Blanchard - 1:00PM 
+ - New Team Member: Alice!
+ - Talk about Alpha Deliverables
+   - Start testing Object Class functions
+   - 3-10 tests for alpha
+ - Talk about end goals
+   - Finish Object Class Testing
+ - Talked about deadlines for Design 2
+
+   
+Peer program with Chris, start creating test functions.
+For demos: 
+Sample 1 or 2 test functions in-game
+Then run mass tester:
+"30/95 Functions Preform as Intended!"
+Printed to console
+
+Goals for Alpha Project, have at least a few Lua tests for the functions created over the summer. Due Sunday!

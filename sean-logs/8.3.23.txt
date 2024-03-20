@@ -1,0 +1,13 @@
+8/3/2023
+
+l_get_acceleration
+created:
+n_get_acceleration
+l_native_get_acceleration
+
+l_set_rotation
+created:
+n_set_rotation
+l_native_set_rotation
+
+

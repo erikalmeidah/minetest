@@ -68,109 +68,177 @@ private:
 	// remove(self)
 	static int l_remove(lua_State *L);
 
+    static int l_native_remove(lua_State *L);
+
 	// get_pos(self)
 	static int l_get_pos(lua_State *L);
 
+    static int l_native_get_pos(lua_State *L);
+
 	// set_pos(self, pos)
 	static int l_set_pos(lua_State *L);
+    
+    static int l_native_set_pos(lua_State *L);
 
 	// move_to(self, pos, continuous)
 	static int l_move_to(lua_State *L);
 
+    static int l_native_move_to(lua_State *L);
+
 	// punch(self, puncher, time_from_last_punch, tool_capabilities, dir)
 	static int l_punch(lua_State *L);
+
+    static int l_native_punch(lua_State *L);
 
 	// right_click(self, clicker)
 	static int l_right_click(lua_State *L);
 
+    static int l_native_right_click(lua_State *L);
+
 	// set_hp(self, hp, reason)
 	static int l_set_hp(lua_State *L);
+
+    static int l_native_set_hp(lua_State *L);
 
 	// get_hp(self)
 	static int l_get_hp(lua_State *L);
 
+    static int l_native_get_hp(lua_State *L);
+
 	// get_inventory(self)
 	static int l_get_inventory(lua_State *L);
+
+    static int l_native_get_inventory(lua_State *L);
 
 	// get_wield_list(self)
 	static int l_get_wield_list(lua_State *L);
 
+	static int l_native_get_wield_list(lua_State *L);
+
 	// get_wield_index(self)
 	static int l_get_wield_index(lua_State *L);
+
+    static int l_native_get_wield_index(lua_State *L);
 
 	// get_wielded_item(self)
 	static int l_get_wielded_item(lua_State *L);
 
+    static int l_native_get_wielded_item(lua_State *L);
+
 	// set_wielded_item(self, item)
 	static int l_set_wielded_item(lua_State *L);
+
+    static int l_native_set_wielded_item(lua_State *L);
 
 	// set_armor_groups(self, groups)
 	static int l_set_armor_groups(lua_State *L);
 
+    static int l_native_set_armor_groups(lua_State *L);
+
 	// get_armor_groups(self)
 	static int l_get_armor_groups(lua_State *L);
 
+    static int l_native_get_armor_groups(lua_State *L);
+
+//////////////////////////////
 	// set_physics_override(self, override_table)
 	static int l_set_physics_override(lua_State *L);
 
 	// get_physics_override(self)
 	static int l_get_physics_override(lua_State *L);
+//////////////////////////////
 
 	// set_animation(self, frame_range, frame_speed, frame_blend, frame_loop)
 	static int l_set_animation(lua_State *L);
 
+    static int l_native_set_animation(lua_State *L);
+
 	// set_animation_frame_speed(self, frame_speed)
 	static int l_set_animation_frame_speed(lua_State *L);
+
+	static int l_native_set_animation_frame_speed(lua_State *L);
 
 	// get_animation(self)
 	static int l_get_animation(lua_State *L);
 
+	static int l_native_get_animation(lua_State *L);
+
 	// set_bone_position(self, bone, position, rotation)
 	static int l_set_bone_position(lua_State *L);
+
+	static int l_native_set_bone_position(lua_State *L);
 
 	// get_bone_position(self, bone)
 	static int l_get_bone_position(lua_State *L);
 
+	static int l_native_get_bone_position(lua_State *L);
+
 	// set_attach(self, parent, bone, position, rotation)
 	static int l_set_attach(lua_State *L);
+
+	static int l_native_set_attach(lua_State *L);
 
 	// get_attach(self)
 	static int l_get_attach(lua_State *L);
 
+	static int l_native_get_attach(lua_State *L);
+
 	// get_children(self)
 	static int l_get_children(lua_State *L);
+
+	static int l_native_get_children(lua_State *L);
 
 	// set_detach(self)
 	static int l_set_detach(lua_State *L);
 
+	static int l_native_set_detach(lua_State *L);
+
 	// set_properties(self, properties)
 	static int l_set_properties(lua_State *L);
+
+	static int l_native_set_properties(lua_State *L);
 
 	// get_properties(self)
 	static int l_get_properties(lua_State *L);
 
+	static int l_native_get_properties(lua_State *L);
+
 	// is_player(self)
 	static int l_is_player(lua_State *L);
+
+	static int l_native_is_player(lua_State *L);
 
 	/* LuaEntitySAO-only */
 
 	// set_velocity(self, velocity)
 	static int l_set_velocity(lua_State *L);
 
+	static int l_native_set_velocity(lua_State *L);
+
 	// add_velocity(self, velocity)
 	static int l_add_velocity(lua_State *L);
+
+	static int l_native_add_velocity(lua_State *L);
 
 	// get_velocity(self)
 	static int l_get_velocity(lua_State *L);
 
+	static int l_native_get_velocity(lua_State *L);
+
 	// set_acceleration(self, acceleration)
 	static int l_set_acceleration(lua_State *L);
+
+	static int l_native_set_acceleration(lua_State *L);
 
 	// get_acceleration(self)
 	static int l_get_acceleration(lua_State *L);
 
+	static int l_native_get_acceleration(lua_State *L);
+
 	// set_rotation(self, rotation)
 	static int l_set_rotation(lua_State *L);
+
+	static int l_native_set_rotation(lua_State *L);
 
 	// get_rotation(self)
 	static int l_get_rotation(lua_State *L);
@@ -355,11 +423,15 @@ private:
 	// set_local_animation(self, idle, walk, dig, walk_while_dig, frame_speed)
 	static int l_set_local_animation(lua_State *L);
 
+	static int l_native_set_local_animation(lua_State *L);
+
 	// get_local_animation(self)
 	static int l_get_local_animation(lua_State *L);
 
 	// set_eye_offset(self, firstperson, thirdperson)
 	static int l_set_eye_offset(lua_State *L);
+
+	static int l_native_set_eye_offset(lua_State *L);
 
 	// get_eye_offset(self)
 	static int l_get_eye_offset(lua_State *L);
@@ -367,11 +439,17 @@ private:
 	// set_nametag_attributes(self, attributes)
 	static int l_set_nametag_attributes(lua_State *L);
 
+	static int l_native_set_nametag_attributes(lua_State *L);
+
 	// get_nametag_attributes(self)
 	static int l_get_nametag_attributes(lua_State *L);
 
+	static int l_native_get_nametag_attributes(lua_State *L);
+
 	// send_mapblock(pos)
 	static int l_send_mapblock(lua_State *L);
+
+	static int l_native_send_mapblock(lua_State *L);
 
 	// set_minimap_modes(self, modes, wanted_mode)
 	static int l_set_minimap_modes(lua_State *L);

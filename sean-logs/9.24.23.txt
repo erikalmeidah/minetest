@@ -1,0 +1,12 @@
+(Have discord logs to prove active)
+Meeting with Chris to help debug test functions 6:00-7:35
+- Helped get his testing working
+  - Missing CMakeLists.txt includes in src, native, and lua for l_object and n_object
+  - Missing object.lua mod inclusion in init.lua
+- Helped describe what input parameters in a lua function is and how it is called
+Lua:
+param1.function(param2, param3)
+C++:
+param1 = checkobject(L, 1)
+param2 = checkobject(L, 2)
+param3 = checkobject(L, 3)

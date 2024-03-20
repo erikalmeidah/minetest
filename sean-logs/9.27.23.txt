@@ -1,0 +1,14 @@
+Meeting with Erik 1:00pm - 1:30pm
+- Discussed native implementation
+- Found pathing error includes
+- Added "../../" to include directories to enable header file functions to be referenced
+- Still receiving error with incompatibilities
+- Passing in an ObjectRef into nativeObjectRef doesn't work because ObjectRef class is not referenced in nativeObject  
+- Have to create a constructor class to duplicate ObjectRef then pass that parameter into native
+
+Meeting with Blanchard 1:30pm - 2:30pm
+- Work on getting native functions working
+- GitHub repo issues (Blanchard might work with me to address these issues)
+- Keep creating tests and automated testing (input a param = 10 and run every command)
+- Erik promoted to branch manager
+- Erik is going to work with Alice

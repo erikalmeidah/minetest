@@ -1,0 +1,11 @@
+7/14/2023
+
+l_set_properties
+created:
+n_set_properties
+l_native_set_properties
+
+l_get_properties
+created:
+n_get_properties
+l_native_get_properties

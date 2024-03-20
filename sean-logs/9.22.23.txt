@@ -1,0 +1,122 @@
+9-22
+4:00pm - 4:30pm
+Added /Lua_object #
+
+Lua object returns page # of the current mods as well as their status.
+
+Ex Output:
+"
+2023-09-22 20:03:22: [Server]: caught command 'lua_object', issued by 'singleplayer'. Parameters: ''
+2023-09-22 20:03:22: [Server]: Enter a page number - /lua_object #
+2023-09-22 20:03:25: [Server]: caught command 'lua_object', issued by 'singleplayer'. Parameters: '1'
+2023-09-22 20:03:25: [Server]: lua_object_remove
+
+2023-09-22 20:03:25: [Server]: lua_object_get_pos
+
+2023-09-22 20:03:25: [Server]: lua_object_set_pos #
+
+2023-09-22 20:03:25: [Server]: lua_object_move_to #
+
+2023-09-22 20:03:25: [Server]: lua_object_punch - Not Working
+
+2023-09-22 20:03:25: [Server]: lua_object_right_click
+
+2023-09-22 20:03:25: [Server]: lua_object_set_hp - Not Working
+
+2023-09-22 20:03:25: [Server]: lua_object_get_hp
+
+2023-09-22 20:03:25: [Server]: lua_object_get_inventory
+
+2023-09-22 20:03:25: [Server]: lua_object_get_weild_list
+"
+
+4:30pm - 8:00pm
+Added /lua_object_right_click
+
+Takes the first 2 active objects, if avaliable, then the 1st active object, the player, right clicks on the nearest object.
+
+Ex Output:
+"
+2023-09-22 20:10:42: [Server]: lua_object_right_click is running!
+2023-09-22 20:10:42: [Server]: Size of Active Objects Array: 2
+2023-09-22 20:10:42: WARNING[Server]: Deprecated call to "get_entity_name (at ...\bin\Debug\..\..\mods\testingnativeapi_server/object.lua:369)
+2023-09-22 20:10:42: [Server]: Object: singleplayer right clicked on __builtin:item
+2023-09-22 20:10:46: ACTION[Server]: player singleplayer (id=1, hp=20) punched LuaEntitySAO "__builtin:item" at (86,22,6) (id=2, hp=1), damage=0
+2023-09-22 20:10:49: [Server]: caught command 'lua_object_right_click', issued by 'singleplayer'. Parameters: ''
+2023-09-22 20:10:49: [Server]: lua_object_right_click is running!
+2023-09-22 20:10:49: [Server]: Size of Active Objects Array: 1
+"
+
+Skipped HP due to unknown input parameter: reason
+l_set_hp(self, hp, reason)
+hp is the new hp float
+reason might be "set_hp", "punch", "fall", "node_damage", "drown", "respawn"
+
+Added /lua_object_get_hp
+
+Returns the active object's hp.
+
+Ex Output:
+"
+2023-09-22 20:26:54: [Server]: lua_object_get_hp is running!
+2023-09-22 20:26:54: [Server]: Size of Active Objects Array: 2
+2023-09-22 20:26:54: [Server]: The object's HP is currently 20
+2023-09-22 20:26:54: [Server]: The object's HP is currently 1
+"
+
+Added /lua_object_get_inventory
+
+Currently dumps the item names of all items in inventory slots. We call "get_list("main")" because an Inventory object is returned.
+
+Ex Output:
+"
+2023-09-22 20:29:23: [Server]: lua_object_get_inventory is running!
+2023-09-22 20:29:23: [Server]: Size of Active Objects Array: 1
+2023-09-22 20:29:23: [Server]: {
+        ItemStack("unittests:colorful_pick 1 121"),
+        ItemStack("basetools:shears_steel"),
+        ItemStack("dignodes:cracky_1_0"),
+        ItemStack("basetools:sword_stone"),
+        ItemStack(""),
+        ItemStack("linus:linus_block"),
+        ItemStack("basenodes:dirt_with_grass 4"),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack("testnodes:mesh_double"),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack(""),
+        ItemStack("")
+}
+"
+
+Added /lua_object_get_weild_list
+
+Returns "main". All I know is that this is an inventory input type/parameter.
+
+Ex Output:
+"
+2023-09-22 20:42:24: [Server]: lua_object_get_weild_list is running!
+2023-09-22 20:42:24: [Server]: Size of Active Objects Array: 1
+2023-09-22 20:42:24: [Server]: The player's wield list is "main"
+"
+
+

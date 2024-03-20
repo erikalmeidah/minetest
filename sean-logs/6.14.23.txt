@@ -1,0 +1,23 @@
+6/14/2023
+
+Created outlines for:
+
+l_remove
+created:
+n_remove
+l_native_remove
+
+l_get_pos
+created:
+n_get_pos
+l_native_get_pos
+
+l_set_pos
+created:
+n_set_pos
+l_native_set_pos
+
+l_move_to
+created:
+n_move_to
+l_native_move_to

@@ -1,0 +1,10 @@
+10-31
+3:00-7:00pm
+Continued Working on Modding Documentation
+
+Had meeting with Erik and Alice about updates and discussing Github
+
+Fixed native rollback as deleting files and readding them for screenshot purposes created linker errors which fixing steps were added to the mod creation tutorial
+
+Alice worked with me to create better testing methods, she was able to output debug.txt outputs into the log file and I implemented my counter into the code
+- Steps for this will also be added to the tutorial

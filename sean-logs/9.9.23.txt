@@ -1,0 +1,7 @@
+Started working on creating the test mod for l_object.cpp:
+"lua_remove_object"
+- Should remove object player is either holding/looking at
+- need to find object reference names
+"lua_get_pos"
+- Gets the given entity's position
+

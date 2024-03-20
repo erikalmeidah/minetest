@@ -1,0 +1,9 @@
+9-20
+8:00pm - 11:30pm
+Having issue with incorperating some native functions, require rerouting of header file includes.
+
+May need to create a native test function to ensure that the file is in the correct location.
+
+Preformed more testing on implmented functions to ensure they are working correctly. 
+
+Bug - Punch is not loading correctly, move_to and set_pos currently do the same thing, move_to includes boolean, figure out why! If move_to and set_pos don't have an input param then crash, maybe instead prompt user for input.

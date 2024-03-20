@@ -1,0 +1,27 @@
+9/30/23 12:00pm - 2:00pm
+Created a comprehensive checklist for all lua, native, and comparrison tests:
+- https://docs.google.com/spreadsheets/d/1PM4jhVm7i4OwgGq1aDPfn8IWj7l7l0uh8i5fXMeRUhU/edit?usp=sharing
+Added percentage functionality through AppScripts:
+
+function calculateCheckboxPercentage(range) {
+  var totalCheckboxes = 0;
+  var checkedCheckboxes = 0;
+  
+  range.forEach(function(row) {
+    row.forEach(function(cell) {
+      if (cell === true) {
+        checkedCheckboxes++;
+      }
+      if (cell === true || cell === false) {
+        totalCheckboxes++;
+      }
+    });
+  });
+  
+  if (totalCheckboxes === 0) {
+    return "No checkboxes found.";
+  }
+  
+  var percentage = (checkedCheckboxes / totalCheckboxes) * 100;
+  return percentage.toFixed(2) + "%";
+}

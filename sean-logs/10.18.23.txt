@@ -1,0 +1,51 @@
+10-18
+1:00-2:00
+Minetest Meeting w/ Alice and Erik
+
+Helped Alice with setting up mods and current task description
+
+Alice got 5 mods working, gave working lua examples, lua examples with input params, and a non working example
+
+Task:
+Output console commands into log file:
+"
+Command: lua_object_set_fov
+Result: Success
+"
+converted to:
+"
+Command: lua_object_set_fov
+Result: Success
+Output: 
+2023-10-08 13:11:01: [Server]: lua_object_set_fov is running!
+2023-10-08 13:11:01: [Server]: Invalid FOV values
+2023-10-08 13:11:04: [Server]: caught command 'lua_object_set_fov', issued by 'singleplayer'. Parameters: '20'
+"
+
+2:00-3:00
+Worked on native porting:
+
+Implemented set_pos, move_to, set_hp, get_hp
+
+Created tests for set_hp, get_hp
+
+Output from automated log file:
+
+"
+Command: native_object_get_pos
+Result: Success
+
+Command: native_object_set_pos
+Result: Success
+
+Command: native_object_move_to
+Result: Success
+
+Command: native_object_set_hp
+Result: Success
+
+...
+
+Command: native_object_get_hp
+Result: Success
+"

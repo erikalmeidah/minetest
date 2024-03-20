@@ -1,0 +1,7 @@
+10-2
+2:00pm - 6:00pm
+Finished documentation of Cacti Councils modding flow guide
+
+Successful moved Lisa work documents into the native-api branch
+
+Added a getting started section to the GitHub to better aid in rebuilding our test branch

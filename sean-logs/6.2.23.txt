@@ -1,0 +1,8 @@
+6/2/2023
+
+Error building minetest because branch created, sean-test-branch, messed up local files and now build doesnt work.
+
+Tried switching build back to native-api and build and no change. 
+
+Tried undoing branch, didn't work as the build was not the same one I downloaded.
+
